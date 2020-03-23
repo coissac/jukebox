@@ -285,3 +285,67 @@ EOF
 ##
 
 systemctl enable squeezelite.service
+
+##
+## Ajoute la gestion des hautparleurs bluetooth
+##
+## Je suis la recette distribuée par : 
+##   https://github.com/oweitman/squeezelite-bluetooth
+##
+
+# Installation des dépendances...
+
+apt-get install -y pi-bluetooth git \
+                   libasound2-dev dh-autoreconf libortp-dev \
+                   bluez pi-bluetooth bluez-tools libbluetooth-dev \
+                   libusb-dev libglib2.0-dev libudev-dev libical-dev \
+                   libreadline-dev libsbc1 libsbc-dev \
+                   libdbus-glib-1-dev python3-pip
+                   
+
+pushd ~/softwares
+
+# Compilation de la bibliothèque bluez-alsa
+
+git clone https://github.com/Arkq/bluez-alsa.git
+pushd bluez-alsa
+autoreconf --install
+mkdir build && cd build
+../configure --disable-hcitop --with-alsaplugindir=/usr/lib/arm-linux-gnueabihf/alsa-lib
+make && make install
+
+popd
+
+# Installation des scripts de gestion des services bluetooth
+
+pip3 install dbus-python
+
+git clone https://github.com/oweitman/squeezelite-bluetooth.git
+pushd squeezelite-bluetooth
+
+tmp=$(mktemp)
+sed 's/lms/squeezelite/' \
+    src/etc/systemd/system/btspeaker-monitor.service \
+    > "${tmp}"
+    
+mv "${tmp}" src/etc/systemd/system/btspeaker-monitor.service
+rm -f "${tmp}"
+
+mkdir -p /etc/pyserver
+cp src/etc/pyserver/btspeaker-monitor.py /etc/pyserver/
+cp src/etc/pyserver/bt-devices /etc/pyserver
+cp src/etc/systemd/system/btspeaker-monitor.service /etc/systemd/system
+cp src/etc/systemd/system/bluezalsa.service /etc/systemd/system
+
+chown root:root /etc/pyserver/btspeaker-monitor.py
+chown root:root /etc/pyserver/bt-devices
+chown root:root /etc/systemd/system/btspeaker-monitor.service
+chown root:root /etc/systemd/system/bluezalsa.service
+
+chmod +x /etc/pyserver/btspeaker-monitor.py
+
+popd
+
+popd
+
+
