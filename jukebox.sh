@@ -407,13 +407,11 @@ apt-get install -y fluid-soundfont-gs \
                    fluidsynth \
                    timidity \
                    apache2 \
-                   jackd2 \
                    opus-tools
 
 edit_config start_x 1
 
 adduser --disabled-login \
-        --no-create-home \
         --system  "$KODI_USER"
 
 usermod -a -G audio,video,input,dialout,plugdev,netdev,users,cdrom,tty "$KODI_USER"
