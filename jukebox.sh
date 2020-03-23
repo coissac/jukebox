@@ -442,3 +442,10 @@ WantedBy = multi-user.target
 EOF
 
 sudo systemctl enable kodi.service
+
+####
+#
+# Installe le montage automatique des partitions réseaux par autofs
+#
+#
+
