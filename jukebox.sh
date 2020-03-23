@@ -79,6 +79,10 @@ function download_url() {
   
   local filename=$(basename "$url")
   
+  if [[ "$filename" == "download" ]] ; then
+    filename=$(basename $(dirname $SQUEEZE_URL) )
+  fi
+  
   wget -O "${filename}" "$url" 
   
   echo ${filename}
@@ -164,4 +168,40 @@ LMS_PKG=$(download_url "${URL_LMS}")
 dpkg -i "${LMS_PKG}"
 
 
+####
+#
+# Installation de squeezelite
+#
+#
 
+# Installation des dépendances...
+
+apt-get install -y libasound2-dev libflac-dev \
+                   libmad0-dev libvorbis-dev \
+                   libfaad-dev libmpg123-dev \
+                   liblircclient-dev libncurses5-dev
+  
+mkdir -p ~/softwares/squeezelite
+pushd ~/softwares/squeezelite
+
+SQUEEZE_URL=$(curl https://sourceforge.net/projects/lmsclients/files/squeezelite/linux/ \
+               | egrep href \
+               | egrep 'armv6hf.tar.gz' \
+               | sed -E 's@.*href="([^"]+)".*$@\1@' \
+               | grep download \
+               | sort \
+               | tail -1)
+               
+               
+if [[ ! -d /usr/local/bin ]] ; then 
+   mkdir -p /usr/local/bin
+   chown root:root /usr/local/bin
+fi
+
+SQUEEZE_PKG=$(download_url "${SQUEEZE_URL}")
+tar -xzf "${SQUEEZE_PKG}"
+mv squeezelite /usr/local/bin/squeezelite
+chown root:root /usr/local/bin/squeezelite
+
+popd
+                   
