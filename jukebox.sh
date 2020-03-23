@@ -23,6 +23,9 @@ ACTIVER_SSH_SERVEUR=1        # Si 1 le serveur ssh d'acces distant est activé
 GPU_MEMORY=300               # Kodi a besoin que le GPU dispose de suffisament de
                              # mémoire. Sur une machine avec 1Go de mémoire (PI3B+)
                              # 300Go assure une bonne fluidité
+                             
+KODI_USER=kodi               # Nom de l'utilisateur faisant tourner kodi
+
 
         # Licences de décodage matériel des codec Vidéo
         
@@ -139,7 +142,7 @@ fi
 #   - Ajouter les eventuelles licences pour les 
 #     accellerations materielles des codecs video 
 
-sudo cp /boot/config.txt /boot/config.txt.ori.$(date '+%Y%m%d_%k%M')
+cp /boot/config.txt /boot/config.txt.ori.$(date '+%Y%m%d_%k%M')
 
 if [ ! -z "${GPU_MEMORY}" ] ; then
    edit_config gpu_mem "${GPU_MEMORY}"
@@ -354,3 +357,82 @@ power on
 agent on
 default-agent
 EOF
+
+####
+#
+# Installation de kodi
+#
+# Je suis la recette distribuée par : 
+#      https://www.raspberrypi.org/forums/viewtopic.php?t=251645
+#
+
+apt-get install -y kodi
+
+apt-get install -y kodi-peripheral-joystick \
+                   kodi-pvr-iptvsimple \
+                   kodi-inputstream-adaptive \
+                   kodi-inputstream-rtmp \
+                   kodi-data \
+                   kodi-repository-kodi \
+                   kodi-audiodecoder-2sf \
+                   kodi-audiodecoder-asap \
+                   kodi-audiodecoder-dumb \
+                   kodi-audiodecoder-fluidsynth \
+                   kodi-audiodecoder-gme \
+                   kodi-audiodecoder-gsf \
+                   kodi-audiodecoder-modplug \
+                   kodi-audiodecoder-ncsf \
+                   kodi-audiodecoder-nosefart \
+                   kodi-audiodecoder-openmpt \
+                   kodi-audiodecoder-organya \
+                   kodi-audiodecoder-qsf \
+                   kodi-audiodecoder-sidplay \
+                   kodi-audiodecoder-snesapu \
+                   kodi-audiodecoder-ssf \
+                   kodi-audiodecoder-stsound \
+                   kodi-audiodecoder-timidity \
+                   kodi-audiodecoder-upse \
+                   kodi-audiodecoder-vgmstream \
+                   kodi-audiodecoder-wsr \
+                   kodi-audioencoder-flac \
+                   kodi-audioencoder-lame \
+                   kodi-audioencoder-vorbis \
+                   kodi-audioencoder-wav \
+                   kodi-game-libretro \
+                   kodi-imagedecoder-heif \
+                   kodi-imagedecoder-mpo \
+                   kodi-imagedecoder-raw
+                   
+apt-get install -y fluid-soundfont-gs \
+                   fluidsynth \
+                   timidity \
+                   apache2 \
+                   jackd2 \
+                   opus-tools
+
+edit_config start_x 1
+
+adduser --disabled-login \
+        --no-create-home \
+        --system  "$KODI_USER"
+
+usermod -a -G audio,video,input,dialout,plugdev,netdev,users,cdrom,tty "$KODI_USER"
+
+cat > /lib/systemd/system/kodi.service <<EOF
+[Unit]
+Description = Kodi Media Center
+After = remote-fs.target network-online.target
+Wants = network-online.target
+
+[Service]
+User = $KODI_USER
+Type = simple
+ExecStart = /usr/bin/kodi-standalone
+Restart = on-abort
+RestartSec = 5
+
+[Install]
+WantedBy = multi-user.target
+EOF
+
+sudo systemctl enable kodi.service
