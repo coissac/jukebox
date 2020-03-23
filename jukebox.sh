@@ -13,8 +13,8 @@ ACTIVER_SSH_SERVEUR=1
 
 GPU_MEMORY=300
 
-decode_MPG2
-decode_WVC1
+DECODE_MPG2=""
+DECODE_WVC1=""
 
 
 ###########################################################################
@@ -32,6 +32,7 @@ function edit_config() {
   local parametre=$1
   shift
   local value=$*
+  local tmp=$(mktemp)
 
   awk -v date="$(date '+%d/%m/%Y at %k:%M')" \
           '/^ *'${parametre}' *=.*$/ {print; \
@@ -46,7 +47,10 @@ function edit_config() {
                 print "# Edited on",date,"by Jukebox.sh"; \
                 print "#"; \
                 print param"="value; \
-                print }'
+                print }' > "${tmp}"
+                
+  mv "${tmp}" /boot/config.txt
+  chown root:root /boot/config.txt
 }
 
 
@@ -54,8 +58,9 @@ function edit_config() {
 #
 # Remise à jour du système
 #
-sudo apt-get update
-yes Y | sudo apt-get dist-upgrade
+
+apt-get update
+yes Y | apt-get dist-upgrade
 
 ####
 #
@@ -63,7 +68,7 @@ yes Y | sudo apt-get dist-upgrade
 #
 
 if (( ACTIVER_SSH_SERVEUR == 1 )) ; then
-  sudo systemctl enable ssh
+  systemctl enable ssh
 fi  
 
 ####
@@ -73,3 +78,21 @@ fi
 #   - Ajouter la part de la mémoire dédiée au GPU
 #   - Ajouter les eventuelles licences pour les 
 #     accellerations materielles des codecs video 
+
+sudo cp /boot/config.txt /boot/config.txt.ori.$(date '+%Y%m%d_%k%M')
+
+if [ ! -z "${GPU_MEMORY}" ] ; then
+   edit_config gpu_mem "${GPU_MEMORY}"
+fi
+   
+if [ ! -z "${DECODE_MPG2}" ] ; then
+   edit_config decode_MPG2 "${GPU_MEMORY}"
+fi
+
+if [ ! -z "${DECODE_WVC1}" ] ; then
+   edit_config decode_WVC1 "${GPU_MEMORY}"
+fi  
+ 
+   
+ 
+   
