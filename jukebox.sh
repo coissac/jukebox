@@ -9,6 +9,8 @@
 # Options de configuration
 #
 
+HOSTNAME=pizzicato
+
 ACTIVER_SSH_SERVEUR=1
 
 GPU_MEMORY=300
@@ -27,6 +29,23 @@ DECODE_WVC1=""
 #
 # fonctions utilitaires
 #
+
+function change_hostname() {
+  local newname=$1
+  local tmp=$(mktemp)
+  
+  echo "$newname" > /etc/hostname
+  
+  sudo cp /etc/hosts /etc/hosts.ori.$(date '+%Y%m%d_%k%M')
+  
+  awk -v hostname="$newname" \
+      'BEGIN        {OFS="\t"} \
+       /^127.0.1.1/ {$NF=hostname} \
+                    {print $0}' /etc/hosts \
+    > "$tmp"
+    
+  mv "$tmp" /etc/hosts
+}
 
 function edit_config() {
   local parametre=$1
@@ -72,6 +91,13 @@ function download_url() {
 
 apt-get update
 apt-get dist-upgrade -y
+
+###
+#
+# Changement du nom de l'hote
+#
+
+change_hostname "${HOSTNAME}"
 
 ####
 #
