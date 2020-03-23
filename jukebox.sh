@@ -193,6 +193,10 @@ dpkg -i "${LMS_PKG}"
 #
 #
 
+##
+## Installation de l'executable squeezelite
+##
+
 # Installation des dépendances...
 
 apt-get install -y libasound2-dev libflac-dev \
@@ -200,8 +204,12 @@ apt-get install -y libasound2-dev libflac-dev \
                    libfaad-dev libmpg123-dev \
                    liblircclient-dev libncurses5-dev
   
+# Préparation du répertoire de téléchargement
+
 mkdir -p ~/softwares/squeezelite
 pushd ~/softwares/squeezelite
+
+# Récuperation de l'URL de la dernière version de squeezelite
 
 SQUEEZE_URL=$(curl https://sourceforge.net/projects/lmsclients/files/squeezelite/linux/ \
                | egrep href \
@@ -211,22 +219,34 @@ SQUEEZE_URL=$(curl https://sourceforge.net/projects/lmsclients/files/squeezelite
                | sort \
                | tail -1)
                
+# On s'assure que /usr/local/bin existe
                
 if [[ ! -d /usr/local/bin ]] ; then 
    mkdir -p /usr/local/bin
    chown root:root /usr/local/bin
 fi
 
+# Telechargement du binaire
+
 SQUEEZE_PKG=$(download_url "${SQUEEZE_URL}")
+
+# Desarchivage et installation du binaire
+
 tar -xzf "${SQUEEZE_PKG}"
 mv squeezelite /usr/local/bin/squeezelite
 chown root:root /usr/local/bin/squeezelite
 
 popd
 
+##
+## Création de l'utilisateur system qui exécutera les daemons 
+##
+
 adduser --disabled-login \
         --no-create-home \
         --system  "$SQUEEZELITE_USER"
+        
+addgroup squeezelite audio
         
 ##
 ## Création du fichier de config pour Squeezelite
@@ -253,10 +273,15 @@ After=network.target
 
 [Service]
 User=squeezelite
-Group=squeezelite
 EnvironmentFile=/etc/squeezlite.conf
 ExecStart=/usr/local/bin/squeezelite -o \$DEVICE -n \$HOSTENAME \$EXTRA_OPTIONS
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+##
+## Activating the new squeezelite service
+##
+
+systemctl enable squeezelite.service
