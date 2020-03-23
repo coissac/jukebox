@@ -9,15 +9,34 @@
 # Options de configuration
 #
 
-HOSTNAME=pizzicato
+##
+## Paramettre system
+##
 
-ACTIVER_SSH_SERVEUR=1
+HOSTNAME=pizzicato           # Nom de la machine sur le réseau local
+ACTIVER_SSH_SERVEUR=1        # Si 1 le serveur ssh d'acces distant est activé
 
-GPU_MEMORY=300
+##
+## Paramettre kodi
+##
 
-DECODE_MPG2=""
-DECODE_WVC1=""
+GPU_MEMORY=300               # Kodi a besoin que le GPU dispose de suffisament de
+                             # mémoire. Sur une machine avec 1Go de mémoire (PI3B+)
+                             # 300Go assure une bonne fluidité
 
+        # Licences de décodage matériel des codec Vidéo
+        
+DECODE_MPG2=""               # Indiquer ici la clé de licence pour le decodage MPEG2
+DECODE_WVC1=""               # Indiquer ici la clé de licence pour le decodage VC1
+
+
+##
+## Paramettres Squeezelite
+##
+
+SQUEEZELITE_USER=squeezelite     # Nom de l'utilisateur faisant tourner les client LMS
+SQUEEZENAME=$HOSTNAME
+OUTPUT=USB
 
 ###########################################################################
 #####                                                                 #####
@@ -204,4 +223,40 @@ mv squeezelite /usr/local/bin/squeezelite
 chown root:root /usr/local/bin/squeezelite
 
 popd
-                   
+
+adduser --disabled-login \
+        --no-create-home \
+        --system  "$SQUEEZELITE_USER"
+        
+##
+## Création du fichier de config pour Squeezelite
+##
+
+DEVICE=$(squeezelite -l | grep "${OUTPUT}" | grep hardware | awk '{print $1}')
+
+echo selected audio device : $(squeezelite -l | grep "${OUTPUT}" | grep hardware)
+
+cat << EOF > /etc/squeezlite.conf
+DEVICE=$DEVICE
+HOSTENAME=$SQUEEZENAME
+EXTRA_OPTIONS=
+EOF
+
+##
+##  Création du fichier de service systeme pour Squeezelite
+##
+
+cat << EOF > /etc/systemd/system/squeezelite.service
+[Unit]
+Description=Squeezelite
+After=network.target
+
+[Service]
+User=squeezelite
+Group=squeezelite
+EnvironmentFile=/etc/squeezlite.conf
+ExecStart=/usr/local/bin/squeezelite -o \$DEVICE -n \$HOSTENAME \$EXTRA_OPTIONS
+
+[Install]
+WantedBy=multi-user.target
+EOF
