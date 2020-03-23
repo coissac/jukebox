@@ -349,3 +349,8 @@ popd
 popd
 
 
+bluetoothctl << EOF
+power on
+agent on
+default-agent
+EOF
