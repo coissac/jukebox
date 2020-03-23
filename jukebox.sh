@@ -54,13 +54,24 @@ function edit_config() {
 }
 
 
+function download_url() {
+  local url="$1"
+  local tmp=$(mktemp)
+  
+  local filename=$(basename "$url")
+  
+  wget -O "${filename}" "$url" 
+  
+  echo ${filename}
+}
+
 ####
 #
 # Remise à jour du système
 #
 
 apt-get update
-yes Y | apt-get dist-upgrade
+apt-get dist-upgrade -y
 
 ####
 #
@@ -94,5 +105,37 @@ if [ ! -z "${DECODE_WVC1}" ] ; then
 fi  
  
    
+ ####
+ #
+ # Installation du client CEC
+ #
  
-   
+apt install -y cec-utils 
+
+####
+#
+# Installation du Logitech Media Server
+#
+#
+
+# Installation des dépendances...
+
+apt-get install -y libio-socket-ssl-perl \
+                   libnet-libidn-perl    \
+                   libnet-ssleay-perl    \
+                   perl-openssl-defaults \
+                   libsox-fmt-all        \
+                   libflac-dev
+
+# Récuperation de l'URL du dernier 'night build' de la version 7.0
+
+URL_LMS=$(curl http://downloads.slimdevices.com/nightly/?ver=7.9 \
+             | egrep '_arm.deb' \
+             | sed -E 's@.*href="(.*_arm\.deb)".*$@http://downloads.slimdevices.com/nightly/\1@')
+             
+# Téméchargement et installation du package
+LMS_PKG=$(download_url "${URL_LMS}")
+dpkg -i "${LMS_PKG}"
+
+
+
