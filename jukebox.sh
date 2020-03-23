@@ -299,6 +299,7 @@ systemctl enable squeezelite.service
 # Installation des dépendances...
 
 apt-get install -y pi-bluetooth git \
+                   pulseaudio-module-bluetooth \
                    libasound2-dev dh-autoreconf libortp-dev \
                    bluez pi-bluetooth bluez-tools libbluetooth-dev \
                    libusb-dev libglib2.0-dev libudev-dev libical-dev \
