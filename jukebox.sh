@@ -333,6 +333,13 @@ sed 's/lms/squeezelite/' \
     > "${tmp}"
     
 mv "${tmp}" src/etc/systemd/system/btspeaker-monitor.service
+
+sed 's@SQUEEZE_LITE='/usr/bin/squeezelite'@SQUEEZE_LITE='/usr/local/bin/squeezelite'@' \
+    src/etc/systemd/system/btspeaker-monitor.service \
+    > "${tmp}"
+    
+mv "${tmp}" src/etc/systemd/system/btspeaker-monitor.service
+
 rm -f "${tmp}"
 
 mkdir -p /etc/pyserver
