@@ -359,12 +359,12 @@ popd
 
 popd
 
+##
+## Work around for a bug on Raspbian Stretch:
+##    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=881533
+##
 
-bluetoothctl << EOF
-power on
-agent on
-default-agent
-EOF
+mv /lib/systemd/system/triggerhappy.socket /lib/systemd/system/triggerhappy.socket.bug
 
 ####
 #
