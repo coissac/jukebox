@@ -249,7 +249,7 @@ adduser --disabled-login \
         --no-create-home \
         --system  "$SQUEEZELITE_USER"
         
-addgroup squeezelite audio
+addgroup "$SQUEEZELITE_USER" audio
         
 ##
 ## Création du fichier de config pour Squeezelite
@@ -275,7 +275,7 @@ Description=Squeezelite
 After=network.target
 
 [Service]
-User=squeezelite
+User=$SQUEEZELITE_USER
 EnvironmentFile=/etc/squeezlite.conf
 ExecStart=/usr/local/bin/squeezelite -o \$DEVICE -n \$HOSTENAME \$EXTRA_OPTIONS
 
