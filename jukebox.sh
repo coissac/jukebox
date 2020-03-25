@@ -449,3 +449,16 @@ sudo systemctl enable kodi.service
 #
 #
 
+apt-get install -y autofs cifs-utils
+
+
+## We need to edit the /etc/auto.smb file to indicate option of our server
+## 
+
+####
+#
+# Intall cerbot for protecting the web server
+#
+#
+
+apt-get install -y certbot 
